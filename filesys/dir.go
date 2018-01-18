@@ -23,6 +23,27 @@ func (dir *Dir) Attr(ctx context.Context, attr *fuse.Attr) error {
 	return nil
 }
 
+func (dir *Dir) Lookup(ctx context.Context, name string) (fs.Node, error) {
+	log.Println("Lookup for ", name)
+	if dir.Files != nil {
+		for _, file := range *dir.Files {
+			if file.Name == name {
+				log.Println("Found match for directory lookup with size", len(file.Data))
+				return file, nil
+			}
+		}
+	}
+	if dir.Directories != nil {
+		for _, directory := range *dir.Directories {
+			if directory.Name == name {
+				log.Println("Found match for directory lookup")
+				return directory, nil
+			}
+		}
+	}
+	return nil, fuse.ENOENT
+}
+
 func (dir *Dir) Mkdir(ctx context.Context, req *fuse.MkdirRequest) (fs.Node, error) {
 	log.Println("Mkdir request for name", req.Name)
 	newDir := &Dir{Node: Node{Name: req.Name, Inode: NewInode()}}
