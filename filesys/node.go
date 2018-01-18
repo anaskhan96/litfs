@@ -1,11 +1,13 @@
 package filesys
 
+var inode uint64
+
 type Node struct {
-	inode uint64
-	name  string
+	Inode uint64
+	Name  string
 }
 
-func NewInode(inode uint64) uint64 {
-	inode += 1
+func NewInode() uint64 {
+	inode++
 	return inode
 }
