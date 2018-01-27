@@ -2,7 +2,6 @@ package filesys
 
 import (
 	"log"
-	"os"
 
 	"golang.org/x/net/context"
 
@@ -19,7 +18,7 @@ type Dir struct {
 func (dir *Dir) Attr(ctx context.Context, attr *fuse.Attr) error {
 	log.Println("Attributes for directory", dir.Name)
 	attr.Inode = dir.Inode
-	attr.Mode = os.ModeDir | 0444
+	attr.Mode = 0774
 	return nil
 }
 
