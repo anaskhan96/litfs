@@ -26,6 +26,7 @@ func main() {
 	defer conn.Close()
 
 	server := fs.New(conn, nil)
+
 	fsys := &filesys.FS{
 		&filesys.Dir{Node: filesys.Node{Name: "head", Inode: filesys.NewInode()}, Files: &[]*filesys.File{
 			&filesys.File{Node: filesys.Node{Name: "hello", Inode: filesys.NewInode()}, Data: []byte("hello world!")},
