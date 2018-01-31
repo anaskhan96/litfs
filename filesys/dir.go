@@ -3,6 +3,7 @@ package filesys
 import (
 	"log"
 	"os"
+	"sync"
 
 	"golang.org/x/net/context"
 
@@ -14,6 +15,7 @@ type Dir struct {
 	Node
 	Files       *[]*File
 	Directories *[]*Dir
+	sync.Mutex
 }
 
 func (dir *Dir) Attr(ctx context.Context, attr *fuse.Attr) error {
@@ -124,4 +126,96 @@ func (dir *Dir) ReadDirAll(ctx context.Context) ([]fuse.Dirent, error) {
 		log.Println(len(children), " children for dir", dir.Name)
 	}
 	return children, nil
+}
+
+func (dir *Dir) Rename(ctx context.Context, req *fuse.RenameRequest, newDir fs.Node) error {
+	log.Println("Rename requested from", req.OldName, "to", req.NewName)
+	nd := newDir.(*Dir)
+	if dir.Inode == nd.Inode {
+		dir.Lock()
+		defer dir.Unlock()
+		for _, file := range *dir.Files {
+			if file.Name == req.OldName {
+				file.Name = req.NewName
+				return nil
+			}
+		}
+	} else if dir.Inode < nd.Inode {
+		dir.Lock()
+		defer dir.Unlock()
+		nd.Lock()
+		defer nd.Unlock()
+		var fileDirty *File
+		for _, file := range *dir.Files {
+			if file.Name == req.OldName {
+				fileDirty = file
+				break
+			}
+		}
+		if fileDirty != nil {
+			dirExists := false
+			for _, directory := range *dir.Directories {
+				if directory.Name == nd.Name {
+					dirExists = true
+					break
+				}
+			}
+			if dirExists {
+				// Removing the file
+				files := []*File{}
+				for _, file := range *dir.Files {
+					if file != fileDirty {
+						files = append(files, file)
+					}
+				}
+				dir.Files = &files
+				// Adding in the new directory
+				ndFiles := []*File{fileDirty}
+				if nd.Files != nil {
+					ndFiles = append(ndFiles, *nd.Files...)
+				}
+				nd.Files = &ndFiles
+				return nil
+			}
+		}
+	} else {
+		nd.Lock()
+		defer nd.Unlock()
+		dir.Lock()
+		defer dir.Unlock()
+		var fileDirty *File
+		for _, file := range *dir.Files {
+			if file.Name == req.OldName {
+				fileDirty = file
+				break
+			}
+		}
+		if fileDirty != nil {
+			dirExists := false
+			for _, directory := range *nd.Directories {
+				if directory == dir {
+					dirExists = true
+					break
+				}
+			}
+			if dirExists {
+				// Removing the file
+				files := []*File{}
+				for _, file := range *dir.Files {
+					if file != fileDirty {
+						files = append(files, file)
+					}
+				}
+				dir.Files = &files
+				// Adding in the new directory
+				ndFiles := []*File{fileDirty}
+				if nd.Files != nil {
+					ndFiles = append(ndFiles, *nd.Files...)
+				}
+				nd.Files = &ndFiles
+			}
+			return nil
+		}
+	}
+	return fuse.ENOENT
 }
