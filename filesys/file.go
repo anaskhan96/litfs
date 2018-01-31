@@ -17,7 +17,7 @@ type File struct {
 func (file *File) Attr(ctx context.Context, attr *fuse.Attr) error {
 	log.Println("Attributes for file", file.Name)
 	attr.Inode = file.Inode
-	attr.Mode = 0776
+	attr.Mode = 0777
 	attr.Size = uint64(len(file.Data))
 	return nil
 }
@@ -51,5 +51,9 @@ func (file *File) Open(ctx context.Context, req *fuse.OpenRequest, resp *fuse.Op
 
 func (file *File) Release(ctx context.Context, req *fuse.ReleaseRequest) error {
 	log.Println("Release requested on file", file.Name)
+	return nil
+}
+
+func (file *File) Fsync(ctx context.Context, req *fuse.FsyncRequest) error {
 	return nil
 }
