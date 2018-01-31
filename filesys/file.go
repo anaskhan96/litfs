@@ -53,3 +53,7 @@ func (file *File) Release(ctx context.Context, req *fuse.ReleaseRequest) error {
 	log.Println("Release requested on file", file.Name)
 	return nil
 }
+
+func (f *File) Fsync(ctx context.Context, req *fuse.FsyncRequest) error {
+	return nil
+}
