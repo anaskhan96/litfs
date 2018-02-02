@@ -15,6 +15,7 @@ type Dir struct {
 	Node
 	Files       *[]*File
 	Directories *[]*Dir
+	MetaData    *fuse.Attr
 	sync.Mutex
 }
 

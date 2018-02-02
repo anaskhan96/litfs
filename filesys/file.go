@@ -11,7 +11,8 @@ import (
 
 type File struct {
 	Node
-	Data []byte
+	Data     []byte
+	MetaData *fuse.Attr
 }
 
 func (file *File) Attr(ctx context.Context, attr *fuse.Attr) error {
