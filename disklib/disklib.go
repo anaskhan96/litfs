@@ -1,5 +1,7 @@
 package disklib
 
+const BlockSize = 4096
+
 import (
 	"os"
 )

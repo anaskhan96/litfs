@@ -4,10 +4,10 @@ var inode uint64
 
 // serves as the inode table
 type Node struct {
-	Inode  uint64
-	Name   string
-	Offest uint32
-	Size   uint64
+	Inode    uint64
+	Name     string
+	BlockNum uint32
+	Size     uint64
 }
 
 func NewInode() uint64 {
