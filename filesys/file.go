@@ -7,12 +7,13 @@ import (
 	"bazil.org/fuse/fs"
 	"bazil.org/fuse/fuseutil"
 	"golang.org/x/net/context"
+	"sync"
 )
 
 type File struct {
 	Node
-	Data     []byte
-	MetaData *fuse.Attr
+	Data []byte
+	sync.Mutex
 }
 
 func (file *File) Attr(ctx context.Context, attr *fuse.Attr) error {
@@ -36,6 +37,8 @@ func (file *File) ReadAll(ctx context.Context) ([]byte, error) {
 
 func (file *File) Write(ctx context.Context, req *fuse.WriteRequest, resp *fuse.WriteResponse) error {
 	log.Println("Trying to write to", file.Name, "data:", string(req.Data))
+	file.Lock()
+	defer file.Unlock()
 	resp.Size = len(req.Data)
 	file.Data = req.Data
 	log.Println("Wrote to file", file.Name)
