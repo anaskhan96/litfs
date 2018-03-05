@@ -34,9 +34,9 @@ func main() {
 
 	var fsys *filesys.FS
 	if _, err := os.Stat("disklib/sda"); err == nil {
-		f, _ := disklib.OpenDisk("disklib/sda")
-		metadataBytes := make([]byte, 2*4096)
-		f.Read(metadataBytes)
+		f, _ := disklib.OpenDisk("disklib/sda", disklib.DISKSIZE)
+		metadataBytes := make([]byte, disklib.BLKSIZE)
+		disklib.ReadBlock(f, 1, &metadataBytes)
 		metadataBytes = bytes.Trim(metadataBytes, string(byte(0)))
 		metadataMap := make(map[string]interface{})
 		json.Unmarshal(metadataBytes, &metadataMap)
@@ -130,11 +130,10 @@ func cleanup(fsys *filesys.FS) {
 	if err != nil {
 		log.Println(err)
 	}
-	f, err := disklib.OpenDisk("disklib/sda")
-	zeros := make([]byte, 2*4096)
+	f, err := disklib.OpenDisk("disklib/sda", disklib.DISKSIZE)
+	zeros := make([]byte, disklib.BLKSIZE)
 	f.Write(zeros)
-	f.Seek(0, 0)
-	f.Write(metadata)
+	disklib.WriteBlock(f, 1, &metadata)
 	fmt.Println(string(metadata))
 
 	// Unmounting the directory
