@@ -2,7 +2,7 @@ package main
 
 import (
 	"./disklib"
-	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -37,7 +37,6 @@ func main() {
 		f, _ := disklib.OpenDisk("disklib/sda", disklib.DISKSIZE)
 		metadataBytes := make([]byte, disklib.BLKSIZE)
 		disklib.ReadBlock(f, 1, &metadataBytes)
-		metadataBytes = bytes.Trim(metadataBytes, string(byte(0)))
 		metadataMap := make(map[string]interface{})
 		json.Unmarshal(metadataBytes, &metadataMap)
 		rootDir, _ := metadataMap["RootDir"].(map[string]interface{})
@@ -108,7 +107,8 @@ func setupFile(m map[string]interface{}) filesys.File {
 		} else if key == "Data" {
 			/* Doesn't work, but then again, no need for this
 			in Phase 2 as we read-write from disk */
-			file.Data, _ = value.([]byte)
+			data, _ := value.(string)
+			file.Data, _ = base64.StdEncoding.DecodeString(data)
 		}
 	}
 	return file

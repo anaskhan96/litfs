@@ -1,6 +1,7 @@
 package disklib
 
 import (
+	"bytes"
 	"os"
 )
 
@@ -23,14 +24,27 @@ func OpenDisk(filename string, mbytes int) (*os.File, error) {
 	return fd, nil
 }
 
-func ReadBlock(disk *os.File, blocknr int, data *[]byte) {
-	disk.Seek(int64(blocknr*BLKSIZE), 0)
-	disk.Read(*data)
+func ReadBlock(disk *os.File, blocknr int, data *[]byte) (int, error) {
+	if _, err := disk.Seek(int64(blocknr*BLKSIZE), 0); err != nil {
+		return 0, err
+	}
+	nbytes, err := disk.Read(*data)
+	if err != nil {
+		return 0, err
+	}
+	*data = bytes.Trim(*data, string(byte(0)))
+	return nbytes, nil
 }
 
-func WriteBlock(disk *os.File, blocknr int, data *[]byte) {
+func WriteBlock(disk *os.File, blocknr int, data *[]byte) (int, error) {
 	zeros := make([]byte, BLKSIZE)
 	disk.Write(zeros)
-	disk.Seek(int64(blocknr*BLKSIZE), 0)
-	disk.Write(*data)
+	if _, err := disk.Seek(int64(blocknr*BLKSIZE), 0); err != nil {
+		return 0, err
+	}
+	nbytes, err := disk.Write(*data)
+	if err != nil {
+		return 0, err
+	}
+	return nbytes, nil
 }
