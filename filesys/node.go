@@ -12,3 +12,7 @@ func NewInode() uint64 {
 	inode++
 	return inode
 }
+
+func InitInode(n uint64) {
+	inode = n
+}

@@ -16,6 +16,8 @@ import (
 	"bazil.org/fuse/fs"
 )
 
+var inodeCount uint64
+
 func main() {
 	if len(os.Args) != 2 {
 		fmt.Println("Provide directory for mounting")
@@ -40,12 +42,15 @@ func main() {
 		metadataMap := make(map[string]interface{})
 		json.Unmarshal(metadataBytes, &metadataMap)
 		rootDir, _ := metadataMap["RootDir"].(map[string]interface{})
-		fmt.Println(metadataMap)
 		root := setupDir(rootDir)
 		fsys = &filesys.FS{&root}
 	} else {
 		fsys = &filesys.FS{&filesys.Dir{}}
 	}
+	if inodeCount != 0 {
+		inodeCount--
+	}
+	filesys.InitInode(inodeCount)
 
 	log.Println("About to serve fs")
 	go cleanup(fsys)
@@ -63,7 +68,9 @@ func setupDir(m map[string]interface{}) filesys.Dir {
 	var dir filesys.Dir
 	for key, value := range m {
 		if key == "Inode" {
-			dir.Inode, _ = value.(uint64)
+			inode, _ := value.(float64)
+			dir.Inode = uint64(inode)
+			inodeCount++
 		} else if key == "Name" {
 			dir.Name, _ = value.(string)
 		} else if key == "Files" {
@@ -103,6 +110,7 @@ func setupFile(m map[string]interface{}) filesys.File {
 		if key == "Inode" {
 			inode, _ := value.(float64)
 			file.Inode = uint64(inode)
+			inodeCount++
 		} else if key == "Name" {
 			file.Name, _ = value.(string)
 		} else if key == "Data" {
@@ -131,7 +139,6 @@ func cleanup(fsys *filesys.FS) {
 	}
 	f, err := disklib.OpenDisk("disklib/sda", disklib.DISKSIZE)
 	disklib.WriteBlock(f, 1, &metadata)
-	fmt.Println(string(metadata))
 
 	// Unmounting the directory
 	err = fuse.Unmount("data")
