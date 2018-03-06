@@ -41,7 +41,7 @@ func main() {
 		json.Unmarshal(metadataBytes, &metadataMap)
 		rootDir, _ := metadataMap["RootDir"].(map[string]interface{})
 		fmt.Println(metadataMap)
-		root := setupDir(rootDir) // TODO: Inode nums not being set up properly
+		root := setupDir(rootDir)
 		fsys = &filesys.FS{&root}
 	} else {
 		fsys = &filesys.FS{&filesys.Dir{}}
@@ -106,8 +106,6 @@ func setupFile(m map[string]interface{}) filesys.File {
 		} else if key == "Name" {
 			file.Name, _ = value.(string)
 		} else if key == "Data" {
-			/* Doesn't work, but then again, no need for this
-			in Phase 2 as we read-write from disk */
 			data, _ := value.(string)
 			file.Data, _ = base64.StdEncoding.DecodeString(data)
 		}
