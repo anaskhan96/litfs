@@ -101,7 +101,8 @@ func setupFile(m map[string]interface{}) filesys.File {
 	var file filesys.File
 	for key, value := range m {
 		if key == "Inode" {
-			file.Inode, _ = value.(uint64)
+			inode, _ := value.(float64)
+			file.Inode = uint64(inode)
 		} else if key == "Name" {
 			file.Name, _ = value.(string)
 		} else if key == "Data" {
@@ -131,8 +132,6 @@ func cleanup(fsys *filesys.FS) {
 		log.Println(err)
 	}
 	f, err := disklib.OpenDisk("disklib/sda", disklib.DISKSIZE)
-	zeros := make([]byte, disklib.BLKSIZE)
-	f.Write(zeros)
 	disklib.WriteBlock(f, 1, &metadata)
 	fmt.Println(string(metadata))
 
