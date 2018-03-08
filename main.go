@@ -39,6 +39,10 @@ func main() {
 		f, _ := disklib.OpenDisk("disklib/sda", disklib.DISKSIZE)
 		metadataBytes := make([]byte, disklib.BLKSIZE)
 		disklib.ReadBlock(f, 1, &metadataBytes)
+		metablock := make([]byte, disklib.BLKSIZE)
+		disklib.ReadBlock(f, 2, &metablock)
+		disklib.DiskToMeta(metablock)
+		f.Close()
 		metadataMap := make(map[string]interface{})
 		json.Unmarshal(metadataBytes, &metadataMap)
 		rootDir, _ := metadataMap["RootDir"].(map[string]interface{})
@@ -139,6 +143,8 @@ func cleanup(fsys *filesys.FS) {
 	}
 	f, err := disklib.OpenDisk("disklib/sda", disklib.DISKSIZE)
 	disklib.WriteBlock(f, 1, &metadata)
+	disklib.MetaToDisk(f)
+	f.Close()
 
 	// Unmounting the directory
 	err = fuse.Unmount("data")

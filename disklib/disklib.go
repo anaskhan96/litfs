@@ -5,6 +5,8 @@ package disklib
 
 import (
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"github.com/Workiva/go-datastructures/bitarray"
 	"os"
 )
@@ -13,6 +15,13 @@ const (
 	DISKSIZE int = 3
 	BLKSIZE  int = 4096
 )
+
+type MetaBlock struct {
+	Bitmap     []byte
+	LowestFree int
+}
+
+var metaBlockMem MetaBlock
 
 func OpenDisk(filename string, mbytes int) (*os.File, error) {
 	if _, err := os.Stat(filename); err == nil {
@@ -55,9 +64,18 @@ func WriteBlock(disk *os.File, blocknr int, data *[]byte) (int, error) {
 }
 
 func initBlocks(fd *os.File, size, blksize uint64) {
-	blocks := bitarray.NewBitArray(size / blksize)
-	blocks.SetBit(0)
-	blocks.SetBit(1)
-	data, _ := bitarray.Marshal(blocks)
-	WriteBlock(fd, 2, &data)
+	ba := bitarray.NewBitArray(size / blksize)
+	ba.SetBit(0)
+	ba.SetBit(1)
+	data, _ := bitarray.Marshal(ba)
+	metaBlockMem = MetaBlock{data, 2}
+}
+
+func MetaToDisk(f *os.File) {
+	metablock, _ := json.Marshal(metaBlockMem)
+	WriteBlock(f, 2, &metablock)
+}
+
+func DiskToMeta(data []byte) {
+	json.Unmarshal(data, &metaBlockMem)
 }
