@@ -1,16 +1,16 @@
 package main
 
 import (
-	"./disklib"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/anaskhan96/litfs/disklib"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"./filesys"
+	"github.com/anaskhan96/litfs/filesys"
 
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"

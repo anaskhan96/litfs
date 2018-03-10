@@ -7,6 +7,7 @@ type Node struct {
 	Inode  uint64
 	Name   string
 	Blocks []int
+	Size   uint64
 }
 
 func NewInode() uint64 {

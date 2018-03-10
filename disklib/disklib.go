@@ -114,3 +114,7 @@ func updateBlocks(operation string, blocknr int) {
 		}
 	}
 }
+
+func GetLowestFreeBlock() int {
+	return metaBlockMem.LowestFree
+}
