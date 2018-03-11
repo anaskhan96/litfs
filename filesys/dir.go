@@ -24,6 +24,7 @@ func (dir *Dir) Attr(ctx context.Context, attr *fuse.Attr) error {
 	log.Println("Attributes for directory", dir.Name)
 	attr.Inode = dir.Inode
 	attr.Mode = os.ModeDir | 0444
+	attr.BlockSize = uint32(disklib.BLKSIZE)
 	return nil
 }
 
@@ -113,6 +114,7 @@ func (dir *Dir) Remove(ctx context.Context, req *fuse.RemoveRequest) error {
 				/* Clear the allocated blocks */
 				data := make([]byte, 0)
 				f, _ := disklib.OpenDisk("disklib/sda", disklib.DISKSIZE)
+				defer f.Close()
 				for _, i := range file.Blocks {
 					disklib.WriteBlock(f, i, data)
 				}

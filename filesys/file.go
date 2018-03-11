@@ -65,6 +65,7 @@ func (file *File) Write(ctx context.Context, req *fuse.WriteRequest, resp *fuse.
 	numBlocks := int(math.Ceil(float64(file.Size) / float64(disklib.BLKSIZE)))
 	blocks := make([]int, numBlocks)
 	f, _ := disklib.OpenDisk("disklib/sda", disklib.DISKSIZE)
+	defer f.Close()
 	k, allocatedBlocks := 0, 0
 	for i := 0; i < numBlocks; i++ {
 		var blocknr int
@@ -85,7 +86,6 @@ func (file *File) Write(ctx context.Context, req *fuse.WriteRequest, resp *fuse.
 		log.Println("BYTES WRITTEN:", nbytes, "ERR:", err)
 		blocks[i] = blocknr
 	}
-	f.Close()
 	file.Blocks = blocks
 	log.Println(file.Blocks)
 	log.Println("Wrote to file", file.Name)
