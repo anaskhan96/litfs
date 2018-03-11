@@ -127,8 +127,8 @@ func setupFile(m map[string]interface{}) filesys.File {
 				continue
 			}
 			for _, i := range allBlocks {
-				val, _ := i.(int)
-				blocks = append(blocks, val)
+				val, _ := i.(float64)
+				blocks = append(blocks, int(val))
 			}
 			file.Blocks = blocks
 		} else if key == "Size" {
