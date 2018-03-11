@@ -14,7 +14,7 @@ import (
 
 type File struct {
 	Node
-	Data []byte
+	//Data []byte
 	sync.Mutex
 }
 
@@ -28,10 +28,11 @@ func (file *File) Attr(ctx context.Context, attr *fuse.Attr) error {
 	return nil
 }
 
+/* Look at this function later because it's not supposed to return the whole data */
 func (file *File) Read(ctx context.Context, req *fuse.ReadRequest, resp *fuse.ReadResponse) error {
 	log.Println("Requested Read on File", file.Name)
 	data := make([]byte, 0, 10)
-	f, _ := disklib.OpenDisk("../disklib/sda", disklib.DISKSIZE)
+	f, _ := disklib.OpenDisk("disklib/sda", disklib.DISKSIZE)
 	defer f.Close()
 	for i := 0; i < len(file.Blocks); i++ {
 		blockData := make([]byte, disklib.BLKSIZE)
@@ -45,7 +46,7 @@ func (file *File) Read(ctx context.Context, req *fuse.ReadRequest, resp *fuse.Re
 func (file *File) ReadAll(ctx context.Context) ([]byte, error) {
 	log.Println("Reading all of file", file.Name)
 	data := make([]byte, 0, 10)
-	f, _ := disklib.OpenDisk("../disklib/sda", disklib.DISKSIZE)
+	f, _ := disklib.OpenDisk("disklib/sda", disklib.DISKSIZE)
 	defer f.Close()
 	for i := 0; i < len(file.Blocks); i++ {
 		blockData := make([]byte, disklib.BLKSIZE)
@@ -60,12 +61,10 @@ func (file *File) Write(ctx context.Context, req *fuse.WriteRequest, resp *fuse.
 	file.Lock()
 	defer file.Unlock()
 	resp.Size = len(req.Data)
-	//file.Data = req.Data
 	file.Size = uint64(len(req.Data))
 	numBlocks := int(math.Ceil(float64(file.Size) / float64(disklib.BLKSIZE)))
 	blocks := make([]int, numBlocks)
-	f, _ := disklib.OpenDisk("../disklib/sda", disklib.DISKSIZE)
-	defer f.Close()
+	f, _ := disklib.OpenDisk("disklib/sda", disklib.DISKSIZE)
 	k := 0
 	for i := 0; i < numBlocks; i++ {
 		blocknr := disklib.GetLowestFreeBlock()
@@ -76,9 +75,11 @@ func (file *File) Write(ctx context.Context, req *fuse.WriteRequest, resp *fuse.
 			data = req.Data[k:disklib.BLKSIZE]
 		}
 		k += disklib.BLKSIZE
-		disklib.WriteBlock(f, blocknr, &data)
+		nbytes, err := disklib.WriteBlock(f, blocknr, data)
+		log.Println("BYTES WRITTEN:", nbytes, "ERR:", err)
 		blocks[i] = blocknr
 	}
+	f.Close()
 	file.Blocks = blocks
 	log.Println(file.Blocks)
 	log.Println("Wrote to file", file.Name)
@@ -87,29 +88,11 @@ func (file *File) Write(ctx context.Context, req *fuse.WriteRequest, resp *fuse.
 
 func (file *File) Flush(ctx context.Context, req *fuse.FlushRequest) error {
 	log.Println("Flushing file", file.Name)
-	data := make([]byte, 0, 10)
-	f, _ := disklib.OpenDisk("../disklib/sda", disklib.DISKSIZE)
-	defer f.Close()
-	for i := 0; i < len(file.Blocks); i++ {
-		blockData := make([]byte, disklib.BLKSIZE)
-		disklib.ReadBlock(f, file.Blocks[i], &blockData)
-		data = append(data, blockData...)
-	}
-	file.Data = data
 	return nil
 }
 
 func (file *File) Open(ctx context.Context, req *fuse.OpenRequest, resp *fuse.OpenResponse) (fs.Handle, error) {
 	log.Println("Open call on file", file.Name)
-	data := make([]byte, 0, 10)
-	f, _ := disklib.OpenDisk("../disklib/sda", disklib.DISKSIZE)
-	defer f.Close()
-	for i := 0; i < len(file.Blocks); i++ {
-		blockData := make([]byte, disklib.BLKSIZE)
-		disklib.ReadBlock(f, file.Blocks[i], &blockData)
-		data = append(data, blockData...)
-	}
-	file.Data = data
 	return file, nil
 }
 
@@ -119,5 +102,6 @@ func (file *File) Release(ctx context.Context, req *fuse.ReleaseRequest) error {
 }
 
 func (file *File) Fsync(ctx context.Context, req *fuse.FsyncRequest) error {
+	log.Println("Fsync requested on file", file.Name)
 	return nil
 }

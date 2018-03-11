@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/anaskhan96/litfs/disklib"
@@ -38,9 +37,9 @@ func main() {
 	if _, err := os.Stat("disklib/sda"); err == nil {
 		f, _ := disklib.OpenDisk("disklib/sda", disklib.DISKSIZE)
 		metadataBytes := make([]byte, disklib.BLKSIZE)
-		disklib.ReadBlock(f, 1, &metadataBytes)
+		disklib.ReadBlock(f, 0, &metadataBytes)
 		metablock := make([]byte, disklib.BLKSIZE)
-		disklib.ReadBlock(f, 2, &metablock)
+		disklib.ReadBlock(f, 1, &metablock)
 		disklib.DiskToMeta(metablock)
 		f.Close()
 		metadataMap := make(map[string]interface{})
@@ -117,9 +116,24 @@ func setupFile(m map[string]interface{}) filesys.File {
 			inodeCount++
 		} else if key == "Name" {
 			file.Name, _ = value.(string)
-		} else if key == "Data" {
+			/*} else if key == "Data" {
 			data, _ := value.(string)
-			file.Data, _ = base64.StdEncoding.DecodeString(data)
+			file.Data, _ = base64.StdEncoding.DecodeString(data)*/
+		} else if key == "Blocks" {
+			var blocks []int
+			allBlocks, ok := value.([]interface{})
+			if !ok {
+				file.Blocks = nil
+				continue
+			}
+			for _, i := range allBlocks {
+				val, _ := i.(int)
+				blocks = append(blocks, val)
+			}
+			file.Blocks = blocks
+		} else if key == "Size" {
+			size, _ := value.(float64)
+			file.Size = uint64(size)
 		}
 	}
 	return file
@@ -142,7 +156,7 @@ func cleanup(fsys *filesys.FS) {
 		log.Println(err)
 	}
 	f, err := disklib.OpenDisk("disklib/sda", disklib.DISKSIZE)
-	disklib.WriteBlock(f, 1, &metadata)
+	disklib.WriteBlock(f, 0, metadata)
 	disklib.MetaToDisk(f)
 	f.Close()
 

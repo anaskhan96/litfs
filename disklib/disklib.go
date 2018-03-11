@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/Workiva/go-datastructures/bitarray"
+	"log"
 	"os"
 )
 
@@ -49,20 +50,20 @@ func ReadBlock(disk *os.File, blocknr int, data *[]byte) (int, error) {
 	return nbytes, nil
 }
 
-func WriteBlock(disk *os.File, blocknr int, data *[]byte) (int, error) {
+func WriteBlock(disk *os.File, blocknr int, data []byte) (int, error) {
 	zeros := make([]byte, BLKSIZE)
 	if _, err := disk.Seek(int64(blocknr*BLKSIZE), 0); err != nil {
 		return 0, err
 	}
 	disk.Write(zeros)
-	if len(*data) == 0 {
+	if len(data) == 0 {
 		updateBlocks("del", blocknr)
 		return 0, nil
 	}
 	if _, err := disk.Seek(-int64(BLKSIZE), 1); err != nil {
 		return 0, err
 	}
-	nbytes, err := disk.Write(*data)
+	nbytes, err := disk.Write(data)
 	if err != nil {
 		return 0, err
 	}
@@ -80,7 +81,7 @@ func initBlocks(fd *os.File, size, blksize uint64) {
 
 func MetaToDisk(f *os.File) {
 	metablock, _ := json.Marshal(metaBlockMem)
-	WriteBlock(f, 2, &metablock)
+	WriteBlock(f, 1, metablock)
 }
 
 func DiskToMeta(data []byte) {
@@ -113,6 +114,7 @@ func updateBlocks(operation string, blocknr int) {
 			}
 		}
 	}
+	log.Println("New lowest free block:", metaBlockMem.LowestFree)
 }
 
 func GetLowestFreeBlock() int {

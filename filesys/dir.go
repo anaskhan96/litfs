@@ -30,7 +30,7 @@ func (dir *Dir) Lookup(ctx context.Context, name string) (fs.Node, error) {
 	if dir.Files != nil {
 		for _, file := range *dir.Files {
 			if file.Name == name {
-				log.Println("Found match for directory lookup with size", len(file.Data))
+				log.Println("Found match for directory lookup with size", file.Size)
 				return file, nil
 			}
 		}
