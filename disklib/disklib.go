@@ -108,6 +108,7 @@ func updateBlocks(operation string, blocknr int) {
 				for i < int(ba.Capacity()) {
 					if ok, _ := ba.GetBit(uint64(i)); !ok {
 						metaBlockMem.LowestFree = i
+						break
 					}
 					i++
 				}
