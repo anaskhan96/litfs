@@ -9,6 +9,7 @@ import (
 
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
+	"github.com/anaskhan96/litfs/disklib"
 )
 
 type Dir struct {
@@ -103,6 +104,13 @@ func (dir *Dir) Remove(ctx context.Context, req *fuse.RemoveRequest) error {
 		for _, file := range *dir.Files {
 			if file.Name != req.Name {
 				newFiles = append(newFiles, file)
+			} else if file.Name == req.Name {
+				/* Clear the allocated blocks */
+				data := make([]byte, 0)
+				f, _ := disklib.OpenDisk("disklib/sda", disklib.DISKSIZE)
+				for _, i := range file.Blocks {
+					disklib.WriteBlock(f, i, data)
+				}
 			}
 		}
 		dir.Files = &newFiles
