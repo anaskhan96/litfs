@@ -65,9 +65,15 @@ func (file *File) Write(ctx context.Context, req *fuse.WriteRequest, resp *fuse.
 	numBlocks := int(math.Ceil(float64(file.Size) / float64(disklib.BLKSIZE)))
 	blocks := make([]int, numBlocks)
 	f, _ := disklib.OpenDisk("disklib/sda", disklib.DISKSIZE)
-	k := 0
+	k, allocatedBlocks := 0, 0
 	for i := 0; i < numBlocks; i++ {
-		blocknr := disklib.GetLowestFreeBlock()
+		var blocknr int
+		if allocatedBlocks < len(file.Blocks) {
+			blocknr = file.Blocks[i]
+			allocatedBlocks++
+		} else {
+			blocknr = disklib.GetLowestFreeBlock()
+		}
 		var data []byte
 		if i == numBlocks-1 {
 			data = req.Data[k:]
