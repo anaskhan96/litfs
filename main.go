@@ -56,7 +56,7 @@ func main() {
 	filesys.InitInode(inodeCount)
 
 	log.Println("About to serve fs")
-	go cleanup(fsys)
+	//go cleanup(fsys)
 	if err := server.Serve(fsys); err != nil {
 		log.Panicln(err)
 	}
@@ -139,6 +139,7 @@ func setupFile(m map[string]interface{}) filesys.File {
 	return file
 }
 
+/* Not being used; replaced by Destroy() in filesys/fs.go */
 func cleanup(fsys *filesys.FS) {
 	sigs := make(chan os.Signal, 1)
 	done := make(chan bool, 1)
