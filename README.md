@@ -1,6 +1,6 @@
 # litfs
 
-![Image of litfs at work](http://anask.xyz/ss)
+![Image of litfs at work](https://raw.githubusercontent.com/anaskhan96/litfs/master/working.png)
 
 This FUSE filesystem, apart from providing the normal file I/O operations, implements persistence by emulating a single binary Unix file as disk and performing read/writes on it.
 
