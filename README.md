@@ -30,4 +30,4 @@ Run `umount <path-to-directory>` to unmount the filesystem.
 
 ---
 
-This project was built under the course *Unix Systems Programming* in *PES University*.
+This project was built under the course *Unix Systems Programming* at *PES University*.
